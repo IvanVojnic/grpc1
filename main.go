@@ -9,7 +9,8 @@ import (
 )
 
 func main() {
-	s := grpc.NewServer()
+	var opts []grpc.ServerOption
+	s := grpc.NewServer(opts...)
 	srv := service.NewMs1Server()
 	pr.RegisterMs1Server(s, srv)
 	listen, err := net.Listen("tcp", "localhost:8000")
