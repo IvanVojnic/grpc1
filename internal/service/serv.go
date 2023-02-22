@@ -5,12 +5,13 @@ import (
 	"context"
 	"io"
 	"sync"
+	"time"
 )
 
 type Ms1Server struct {
 	pr.UnimplementedMs1Server
-	mu         sync.Mutex // protects routeNotes
-	routeNotes map[string][]*pr.Ms1Server
+	mu       sync.Mutex // protects routeNotes
+	numCheck []*pr.IsEvenNumResponse
 }
 
 func NewMs1Server() *Ms1Server {
@@ -29,17 +30,15 @@ func (s *Ms1Server) IsEvan(stream pr.Ms1_IsEvanServer) error {
 		if err != nil {
 			return err
 		}
-
-		s.mu.Lock()
-		//s.routeNotes[key] = append(s.routeNotes[key], in.)
-		//rn := make([]*pb.RouteNote, len(s.routeNotes[key]))
-		//copy(rn, s.routeNotes[key])
-		s.mu.Unlock()
-
-		for _, note := range rn {
-			if err := stream.Send(note); err != nil {
-				return err
-			}
+		var check pr.IsEvenNumResponse
+		if in.Num%2 == 0 {
+			check = pr.IsEvenNumResponse{IsEvan: true}
+		} else {
+			check = pr.IsEvenNumResponse{IsEvan: false}
 		}
+		if errSend := stream.Send(&check); errSend != nil {
+			return err
+		}
+		time.Sleep(time.Second * 2)
 	}
 }
